@@ -10,3 +10,7 @@ parameters:
   distance_threshold: 0.35
   max_depth: 3000
   subset: null
+  loop_closure:
+    offset: 200
+    stride: 3
+    threshold: 0.4

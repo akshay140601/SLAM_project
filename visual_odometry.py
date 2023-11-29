@@ -3,7 +3,10 @@ import numpy as np
 import yaml
 from utils import stereo_depth, decomposition, feature_extractor, feature_matching, motion_estimation
 from backend import levenberg_marquardt_optimization
+from bow import BoW
 
+# path for the bow vocabulary file
+vocab_path = '../vocab.npy';
 
 # Load Config File
 with open("config/initial_config.yaml", "r") as stream:
@@ -17,11 +20,18 @@ detector_name = config['parameters']['detector']
 subset = config['parameters']['subset']
 threshold = config['parameters']['distance_threshold']
 
+bow_offset = config['parameters']['loop_closure']['offset']
+bow_stride = config['parameters']['loop_closure']['stride']
+bow_threshold = config['parameters']['loop_closure']['threshold']
 
 def visual_odometry(data_handler, detector=detector_name, mask=None, subset=subset, plot=True):
     '''
     Compute the visual odometry using all the components
     '''
+
+    # init bow
+    bow = BoW();
+    bow.load_vocab(vocab_path);
 
     if subset is not None:
         num_frames = subset
@@ -110,6 +120,9 @@ def visual_odometry(data_handler, detector=detector_name, mask=None, subset=subs
         # TODO: Check for loop closure and make loop_closure_detected as True
         # TODO: Add the frame numbers of the detected loop closure (Example: loop_closure_frames.append(5); loop_closure_frames.append(10))
         # This assumes 5 and 10th frame have been identified as loop closure frames.
+
+        bow.add_frame(fpath) # not defined here
+        loop_closure_detected = bow.is_loop_closure(bow_offset, bow_stride, bow_threshold, loop_closure_frames)
 
         if loop_closure_detected == True:
             updated_poses = levenberg_marquardt_optimization(trajectory[:i+2, :, :], loop_closure_frames)

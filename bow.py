@@ -21,12 +21,7 @@ class BoW(object) :
         self.k = k; # num of clusters
         self.kmeans_iter = n_iter;
 
-        FLANN_INDEX_KDTREE = 1;
-        flann_params = {"algorithm": FLANN_INDEX_KDTREE, "trees": 5};
-        matcher = cv.FlannBasedMatcher(flann_params, {});
-
-        self.extractor = cv.BOWImgDescriptorExtractor(self.desc_obj, matcher);
-        self.trainer = cv.BOWKMeansTrainer(k);  
+        self.reset();
 
 
     def build_and_save(self, 
@@ -57,6 +52,17 @@ class BoW(object) :
         vocab = np.load(vocab_path);
         self.extractor.setVocabulary(vocab);
 
+    def reset(self) :
+        FLANN_INDEX_KDTREE = 1;
+        flann_params = {"algorithm": FLANN_INDEX_KDTREE, "trees": 5};
+        matcher = cv.FlannBasedMatcher(flann_params, {});
+
+        self.extractor = cv.BOWImgDescriptorExtractor(self.desc_obj, matcher);
+        self.trainer = cv.BOWKMeansTrainer(self.k);  
+
+        self.features = [];
+
+
     def get_image_features(self, fpath) :
         im = cv.imread(fpath, cv.IMREAD_GRAYSCALE);
         kp = self.desc_obj.detect(im, None);        
@@ -80,18 +86,45 @@ class BoW(object) :
             features = [];
             for fname in tqdm(file_list, desc=f"{i+1}") :
                 fpath = osp.join(dir_, fname);
-                features.append( self.get_image_features(fpath) );
+                # features.append( self.get_image_features(fpath) );
+                self.add_frame(fpath);
 
             break;
 
         print("Print similarity ...");
-        n = len(features);
+        n = len(self.features);
         for i in range(n) :
             for j in range(n) :
-                score = self.get_hist_similarity(features[i], features[j]);
+                score = self.get_hist_similarity(self.features[i], self.features[j]);
                 print(f"Similarity ({i}, {j}) = {score:.4f}");
 
             break;
+
+
+    def add_frame(self, fpath) :
+        self.features.append( self.get_image_features(fpath) );
+
+    def is_loop_closure(self, offset, stride, thresh, closure_l) :
+        if stride > len(self.features) :
+            return False;
+
+        x0 = self.features[-1];
+        scores = [];
+        for i in range(len(self.features)-stride-1, -1, -stride) :
+            # print(i);
+            score = self.get_hist_similarity(x0, self.features[i]);
+            scores.append((score, i));
+
+        scores.sort(reverse=True);
+        top_score, top_i = scores[0];
+        if top_score > thresh :
+            closure_l.append(len(self.features)-1);
+            closure_l.append(top_i);
+            return True;
+
+        return False;
+ 
+        
 
 data_dir = "../../dataset/sequences";        
 vocab_path = '../vocab.npy';
