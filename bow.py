@@ -108,6 +108,9 @@ class BoW(object) :
         if stride > len(self.features) :
             return False;
 
+        if len(self.features)-stride-1 < 0 :
+            return False;
+
         x0 = self.features[-1];
         scores = [];
         for i in range(len(self.features)-stride-1, -1, -stride) :
