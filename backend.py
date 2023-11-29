@@ -62,8 +62,14 @@ def levenberg_marquardt_optimization(initial_poses, loop_closure_frames):
     initial_estimate = gtsam.Values()
 
     for i, pose in enumerate(poses_initial):
+        roll = np.arctan2(initial_poses[i][1][0], initial_poses[i][0][0])
+        pitch = np.arctan2(-initial_poses[i][2][0], np.sqrt((initial_poses[i][2][1])**2 + (initial_poses[i][2][2])**2))
+        yaw = np.arctan2(initial_poses[i][2][1], initial_poses[i][2][2])
+        tx = initial_poses[i][0][3]
+        ty = initial_poses[i][1][3]
+        tz = initial_poses[i][2][3]
         initial_estimate.insert(X(i), pose.compose(gtsam.Pose3(
-            gtsam.Rot3.Rodrigues(-0.1, 0.2, 0.25), gtsam.Point3(0, 0, 0))))
+            gtsam.Rot3.Rodrigues(roll, pitch, yaw), gtsam.Point3(tx, ty, tz))))
         
         if i == 0:
             # Add a prior
@@ -76,7 +82,8 @@ def levenberg_marquardt_optimization(initial_poses, loop_closure_frames):
                                                         gtsam.noiseModel.Diagonal.Sigmas(np.array([0.1, 0.1, 0.1, 0.3, 0.3, 0.3])))
             graph.add(odometry_factor)
 
-    len_list = len(loop_closure_frames) / 2
+    len_list = int(len(loop_closure_frames) / 2)
+    print(len_list)
     loop_closure_frames = np.array(loop_closure_frames).reshape(len_list, 2)
     # Adding the loop closures
     for i in range(loop_closure_frames.shape[0]):
