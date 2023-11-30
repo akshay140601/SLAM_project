@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import yaml
+import os
 
 
 # Load Config File
@@ -242,3 +243,11 @@ def motion_estimation(matches, firstImage_keypoints, secondImage_keypoints, intr
     return rotation_matrix, translation_vector, image1_points, image2_points
 
 ######################################### Motion Estimation ####################################
+
+def get_fpath(frame_number):
+    dataset_fpath = 'dataset/sequences/00'
+    frame_num = '{:06d}'.format(frame_number)
+    left_fpath = os.path.join(dataset_fpath, 'image_0',
+                              f'{frame_num}.png')
+    
+    return left_fpath
