@@ -1,12 +1,12 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import yaml
-from utils import stereo_depth, decomposition, feature_extractor, feature_matching, motion_estimation
+from utils import stereo_depth, decomposition, feature_extractor, feature_matching, motion_estimation, get_fpath
 from backend import levenberg_marquardt_optimization
 from bow import BoW
 
 # path for the bow vocabulary file
-vocab_path = '../vocab.npy';
+vocab_path = 'vocab.npy';
 
 # Load Config File
 with open("config/initial_config.yaml", "r") as stream:
@@ -121,8 +121,10 @@ def visual_odometry(data_handler, detector=detector_name, mask=None, subset=subs
         # TODO: Add the frame numbers of the detected loop closure (Example: loop_closure_frames.append(5); loop_closure_frames.append(10))
         # This assumes 5 and 10th frame have been identified as loop closure frames.
 
-        bow.add_frame(fpath) # not defined here
+        left_fpath = get_fpath(i)
+        bow.add_frame(left_fpath) # not defined here
         loop_closure_detected = bow.is_loop_closure(bow_offset, bow_stride, bow_threshold, loop_closure_frames)
+        print(loop_closure_frames)
 
         if loop_closure_detected == True:
             updated_poses = levenberg_marquardt_optimization(trajectory[:i+2, :, :], loop_closure_frames)
