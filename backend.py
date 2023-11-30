@@ -83,8 +83,9 @@ def levenberg_marquardt_optimization(initial_poses, loop_closure_frames):
             graph.add(odometry_factor)
 
     len_list = int(len(loop_closure_frames) / 2)
-    print(len_list)
+    #print('Starting loop closure')
     loop_closure_frames = np.array(loop_closure_frames).reshape(len_list, 2)
+    #print(loop_closure_frames)
     # Adding the loop closures
     for i in range(loop_closure_frames.shape[0]):
         first_frame = loop_closure_frames[i, 0]
