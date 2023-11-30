@@ -121,7 +121,6 @@ class BoW(object) :
             scores.append((score, i));
 
         scores.sort(reverse=True);
-        from pprint import pprint; pprint(scores);
         top_score, top_i = scores[0];
         if top_score > thresh :
             closure_l.append(len(self.features)-1);
