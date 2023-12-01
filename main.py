@@ -26,11 +26,4 @@ if __name__ == '__main__':
 
     # Estimated trajectory by our algorithm pipeline
     trajectory = visual_odometry(data_handler)
-    trajectory = trajectory.flatten('C')
-    with open("../datasets/poses/test_" + str(sequence) + ".txt", "w") as f:
-        width = 12
-        for k, i in enumerate(trajectory):
-            if (k+1) % width == 0:
-                f.write(str(i)+"\n")
-            else:
-                f.write(str(i)+" ")
+
