@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import yaml
 from utils import stereo_depth, decomposition, feature_extractor, feature_matching, motion_estimation, get_fpath
-from backend import levenberg_marquardt_optimization
+from backend import levenberg_marquardt_optimization, Powells_dog_leg_optimization, Pose3_ISAM2_example
 from bow import BoW
 
 # path for the bow vocabulary file
@@ -49,7 +49,11 @@ def visual_odometry(data_handler, detector=detector_name, mask=None, subset=subs
         # Plotting range for better visualisation
         ax.set_box_aspect((np.ptp(xs), np.ptp(ys), np.ptp(zs)))
         ax.plot(xs, ys, zs, c='dimgray')
-        ax.set_title("Ground Truth vs Estimated Trajectory")
+        #ax.set_title("Ground Truth vs Estimated Trajectory")
+        line_trajectory, = ax.plot([], [], [], c='darkorange')
+        line_updated_poses, = ax.plot([], [], [], c='pink')
+
+        plt.pause(1e-32)
 
     # Create a homogeneous matrix
     homo_matrix = np.eye(4)
@@ -126,9 +130,19 @@ def visual_odometry(data_handler, detector=detector_name, mask=None, subset=subs
         loop_closure_detected = bow.is_loop_closure(bow_offset, bow_stride, bow_threshold, loop_closure_frames)
         print(loop_closure_frames)
 
-        if loop_closure_detected == True:
-            updated_poses = levenberg_marquardt_optimization(trajectory[:i+2, :, :], loop_closure_frames)
+        if loop_closure_detected == True or i%15==0:
+            updated_poses = Pose3_ISAM2_example(trajectory[:i+2, :, :], loop_closure_frames)
             loop_closure_detected = False
+
+            # Update the plot for updated poses
+            xs_updated = updated_poses[:, 0, 3]
+            ys_updated = updated_poses[:, 1, 3]
+            zs_updated = updated_poses[:, 2, 3]
+
+            # Remove the old line and create a new line for updated poses
+            if line_updated_poses:
+                line_updated_poses.remove()
+            line_updated_poses, = ax.plot(xs_updated, ys_updated, zs_updated, c='pink')
 
         if i % 10 == 0:
             print(f'{i} frames have been computed')
@@ -137,14 +151,14 @@ def visual_odometry(data_handler, detector=detector_name, mask=None, subset=subs
             print('All frames have been computed')
 
         if plot:
-            xs = trajectory[:i+2, 0, 3]
-            ys = trajectory[:i+2, 1, 3]
-            zs = trajectory[:i+2, 2, 3]
-            plt.plot(xs, ys, zs, c='darkorange')
-            xs_updated = updated_poses[:, 0, 3]
-            ys_updated = updated_poses[:, 1, 3]
-            zs_updated = updated_poses[:, 2, 3]
-            plt.plot(xs_updated, ys_updated, zs_updated, c='pink')
+            xs = trajectory[:i + 2, 0, 3]
+            ys = trajectory[:i + 2, 1, 3]
+            zs = trajectory[:i + 2, 2, 3]
+
+            # Update the plot for trajectory
+            line_trajectory.set_data(xs, ys)
+            line_trajectory.set_3d_properties(zs)
+
             plt.pause(1e-32)
 
     if plot:
