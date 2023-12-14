@@ -13,4 +13,4 @@ parameters:
   loop_closure:
     offset: 200
     stride: 3
-    threshold: 0.4
+    threshold: 0.5
