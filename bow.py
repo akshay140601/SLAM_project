@@ -10,7 +10,7 @@ import cv2 as cv
 class BoW(object) :
     def __init__(self, 
         desc_name='sift',
-        k=3000, 
+        k=1000, 
         n_iter=1,
     ) :
 
@@ -29,7 +29,6 @@ class BoW(object) :
         save_path,
         image_subdir='image_0',
         step_size=100,
-        sampling_factor=1,
     ) :
 
         for i, sdir in enumerate(sorted(os.listdir(data_dir))) :
@@ -43,11 +42,6 @@ class BoW(object) :
 
                 kp = self.desc_obj.detect(im, None);
                 kp, des = self.desc_obj.compute(im, kp);
-                if sampling_factor > 1 :
-                    n = des.shape[0];
-                    rand_ids = np.random.choice(n, n // sampling_factor);
-                    if len(rand_ids) > 0 :
-                        des = des[rand_ids];
                 self.trainer.add(des);
 
         vocab = self.trainer.cluster();
@@ -87,7 +81,7 @@ class BoW(object) :
             
             file_list = sorted(os.listdir(dir_))
             # random.shuffle(file_list);
-            file_list = file_list[:50];
+            file_list = file_list[:1000];
             print("Extracting features ...");
             features = [];
             for fname in tqdm(file_list, desc=f"{i+1}") :
@@ -128,6 +122,7 @@ class BoW(object) :
 
         scores.sort(reverse=True);
         top_score, top_i = scores[0];
+        #print(top_score)
         if top_score > thresh :
             closure_l.append(len(self.features)-1);
             closure_l.append(top_i);
@@ -137,9 +132,9 @@ class BoW(object) :
  
         
 
-data_dir = "../../dataset/sequences";        
+'''data_dir = "../../dataset/sequences";        
 vocab_path = '../vocab.npy';
 bow = BoW();
-# bow.build_and_save(data_dir, vocab_path, step_size=1, sampling_factor=50);
+# bow.build_and_save(data_dir, vocab_path);
 bow.load_vocab(vocab_path);
-bow.sample_test(data_dir);
+bow.sample_test(data_dir);'''
